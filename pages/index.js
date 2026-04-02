@@ -110,7 +110,7 @@ function Header() {
             color: '#F59E0B',
             textTransform: 'uppercase',
           }}>Androit</span>
-          <span style={{ fontSize: 9, color: '#3A3A35', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Proprietary Script Intelligence</span>
+          <span style={{ fontSize: 9, color: '#3A3A35', letterSpacing: '0.18em', textTransform: 'uppercase' }}>by Sooraj Ram</span>
         </div>
         <div style={{ display: 'flex', gap: 5 }}>
           {[0,1,2].map(i => (
