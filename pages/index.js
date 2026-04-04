@@ -133,7 +133,7 @@ function BriefForm({ brief, setBrief, onSubmit, error, fetchingUrl, setFetchingU
 
       {/* Hero block */}
       <div style={{ marginBottom: 48, paddingBottom: 32, borderBottom: '1px solid #0A0A0A' }}>
-        <div style={{ ...S.sectionLabel, marginBottom: 12 }}>Classified · Proprietary</div>
+        <div style={{ ...S.sectionLabel, marginBottom: 12 }}> Proprietary</div>
         <h1 style={{
           fontFamily: 'var(--font-display)',
           fontSize: 68,
