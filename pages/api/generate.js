@@ -222,7 +222,7 @@ async function fetchBrandContext(url) {
 
     const res = await fetch(normalized, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Androit/1.0; +https://androit.ai)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Adroit/1.0; +https://androit.ai)',
         'Accept': 'text/html,application/xhtml+xml',
       },
       signal: AbortSignal.timeout(8000),
@@ -355,7 +355,7 @@ async function tryOpenRouter(userPrompt) {
           Authorization: `Bearer ${key}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://androit.ai',
-          'X-Title': 'Androit',
+          'X-Title': 'Adroit',
         },
         body: JSON.stringify({
           model,

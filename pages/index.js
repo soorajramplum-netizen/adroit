@@ -104,7 +104,7 @@ function Header() {
     <header style={{ borderBottom: '1px solid #0A0A0A', background: '#0A0A0A' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, letterSpacing: '0.1em', color: '#F59E0B', textTransform: 'uppercase' }}>Androit</span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, letterSpacing: '0.1em', color: '#F59E0B', textTransform: 'uppercase' }}>Adroit</span>
           <span style={{ fontSize: 9, color: '#3A3A35', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Proprietary Script Intelligence</span>
         </div>
         <nav style={{ display: 'flex', gap: 2 }}>
@@ -353,7 +353,7 @@ function LoadingScreen({ step }) {
       </div>
 
       <div style={{ marginTop: 20, fontSize: 11, color: '#9B9B95' }}>
-        {Math.round((step / total) * 100)}% — Androit's proprietary intelligence is working
+        {Math.round((step / total) * 100)}% — Adroit's proprietary intelligence is working
       </div>
     </main>
   )
@@ -466,7 +466,7 @@ function ScriptOutput({ output, onReset }) {
 
       {/* Script title */}
       <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: '1px solid #0A0A0A' }}>
-        <div style={{ ...S.sectionLabel }}>Script output · Androit</div>
+        <div style={{ ...S.sectionLabel }}>Script output · Adroit</div>
         <h2 style={{
           fontFamily: 'var(--font-display)',
           fontSize: 52,
@@ -686,7 +686,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Androit — Script Intelligence</title>
+        <title>Adroit — Script Intelligence</title>
         <meta name="description" content="Behavioral science-powered shoot-ready script generation" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
