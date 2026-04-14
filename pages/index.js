@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 
 const LOADING_STEPS = [
   'Reading brand intelligence',
@@ -98,24 +99,30 @@ const S = {
 
 // ── HEADER ────────────────────────────────────────────────────────────
 function Header() {
+  const router = useRouter()
   return (
     <header style={{ borderBottom: '1px solid #0A0A0A', background: '#0A0A0A' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 22,
-            fontWeight: 900,
-            letterSpacing: '0.1em',
-            color: '#F59E0B',
-            textTransform: 'uppercase',
-          }}>Androit</span>
-          <span style={{ fontSize: 9, color: '#3A3A35', letterSpacing: '0.18em', textTransform: 'uppercase' }}>by Sooraj Ram</span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, letterSpacing: '0.1em', color: '#F59E0B', textTransform: 'uppercase' }}>Androit</span>
+          <span style={{ fontSize: 9, color: '#3A3A35', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Proprietary Script Intelligence</span>
         </div>
+        <nav style={{ display: 'flex', gap: 2 }}>
+          {[{ label: 'Write', href: '/' }, { label: 'Test', href: '/test' }].map(t => {
+            const active = t.label === 'Write'
+            return (
+              <button key={t.label} onClick={() => router.push(t.href)} style={{
+                padding: '6px 18px', fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
+                background: active ? '#F59E0B' : 'transparent',
+                color: active ? '#0A0A0A' : '#5A5A55',
+                border: 'none', borderRadius: 2, transition: 'all 0.15s',
+              }}>{t.label}</button>
+            )
+          })}
+        </nav>
         <div style={{ display: 'flex', gap: 5 }}>
-          {[0,1,2].map(i => (
-            <div key={i} style={{ width: 5, height: 5, background: i === 0 ? '#F59E0B' : '#2A2A25', borderRadius: 1 }} />
-          ))}
+          {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, background: i === 0 ? '#F59E0B' : '#2A2A25', borderRadius: 1 }} />)}
         </div>
       </div>
     </header>
@@ -133,7 +140,7 @@ function BriefForm({ brief, setBrief, onSubmit, error, fetchingUrl, setFetchingU
 
       {/* Hero block */}
       <div style={{ marginBottom: 48, paddingBottom: 32, borderBottom: '1px solid #0A0A0A' }}>
-        <div style={{ ...S.sectionLabel, marginBottom: 12 }}> Proprietary</div>
+        <div style={{ ...S.sectionLabel, marginBottom: 12 }}>Classified · Proprietary</div>
         <h1 style={{
           fontFamily: 'var(--font-display)',
           fontSize: 68,
