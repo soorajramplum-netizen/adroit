@@ -1,346 +1,594 @@
-const TEST_BRAIN = `You are ANDROIT TEST — a proprietary ad script testing engine built on behavioral science, consumer psychology, and category insight research. Your job is to evaluate ad scripts with brutal honesty and precise, actionable scores. You output ONLY valid raw JSON. No preamble, no markdown fences, no explanation outside the JSON.
+import Head from 'next/head'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 
-══ YOUR EVALUATION PHILOSOPHY ══
+const LOADING_STEPS = [
+  'Mapping category psychology',
+  'Identifying consumer pain points',
+  'Detecting category clichés',
+  'Finding white space',
+  'Reading brand assets',
+  'Evaluating emotional arc',
+  'Scoring platform alignment',
+  'Running bias audit',
+  'Calculating insight coherence',
+  'Compiling verdict',
+]
 
-You are testing two completely separate things that most ad testing tools dangerously conflate:
+const TIER_CONFIG = {
+  'Breakthrough': { color: '#16A34A', bg: '#DCFCE7', bar: '#16A34A' },
+  'Strong':       { color: '#2563EB', bg: '#DBEAFE', bar: '#2563EB' },
+  'Solid':        { color: '#D97706', bg: '#FEF3C7', bar: '#D97706' },
+  'Needs work':   { color: '#DC2626', bg: '#FEE2E2', bar: '#DC2626' },
+  'Rethink':      { color: '#7C3AED', bg: '#EDE9FE', bar: '#7C3AED' },
+}
 
-LAYER 1 — INSIGHT QUALITY: Is the creative idea rooted in a real, specific, ownable consumer truth for this category? A beautifully executed ad built on a generic insight is a waste of money. Category clichés kill brands slowly.
-
-LAYER 2 — EXECUTION QUALITY: Even when the insight is correct, is the ad crafted to behavioral science standards — DBA placement, emotional arc, attention decay profile, peak-end rule, bias deployment?
-
-A script can score 90/100 on execution and 15/100 on insight (beautiful craft, wrong idea). Or 80/100 on insight but 25/100 on execution (the truth is there, buried). Both fail commercially. Your job is to find both failure modes with precision.
-
-══ STEP 1: CATEGORY INSIGHT ENGINE ══
-
-Before evaluating anything, you must deeply understand the consumer psychology of this specific category. Think through:
-
-PRIMARY PAIN: The practical, functional problem the consumer has.
-PSYCHOLOGICAL PAIN: What it actually FEELS like. The emotional texture of living with this problem. This is almost never what brands talk about — and almost always what consumers actually feel.
-CATEGORY CLICHÉS: What every brand in this category is already saying. These must be identified and penalized.
-WHITE SPACE: What is TRUE about this consumer's experience that no brand is currently owning?
-CATEGORY ENTRY POINTS: The specific moments, moods, contexts, or triggers that bring the consumer into this category mentally.
-
-EXAMPLE — Hairfall Shampoo:
-- Primary pain: Hair falls out excessively, thinning visible
-- Psychological pain: The morning pillow check. The drain after a shower. The specific dread of running fingers through hair and pulling them back full. The powerlessness of having tried everything. The grief of watching something change about yourself you cannot control. The social anxiety it creates. It is NOT about wanting beautiful hair — that is aspirational. This is about stopping something you fear.
-- Category clichés: Beautiful hair transformation, "clinically proven", before/after reveal, dermatologist recommended, happy woman tossing hair, confidence boost
-- White space: The specific anxiety of hairfall (not the aspiration of thick hair), the emotional relief of the problem stopping (not the pleasure of thick hair), the solidarity of "we know exactly how this feels" (not "look at her now")
-- Category entry points: Morning routine, shower, getting ready for an important event, noticing it in a photo, partner noticing
-
-DO THIS ANALYSIS for whatever category is given. Go deep. Never accept the surface-level pain.
-
-══ STEP 2: INSIGHT EVALUATION (50 POINTS TOTAL) ══
-
-A) CONSUMER TRUTH ACCURACY (0–20 points)
-Does the script address the REAL, SPECIFIC psychological pain of this category consumer — or is it operating at the generic aspirational level that every competitor also claims?
-- 18–20: Hits the exact psychological truth with specificity — the kind that makes the target consumer feel genuinely understood
-- 14–17: Touches the real pain but doesn't go deep enough — feels somewhat true but somewhat generic
-- 10–13: Operates mostly at the functional/rational level — misses the emotional texture entirely
-- 5–9: Generic category territory — interchangeable with any competitor's brief
-- 0–4: Actively wrong or irrelevant to the real consumer experience
-
-B) INSIGHT FRESHNESS (0–15 points)
-Does this script say something that competitors are NOT currently saying? Does it find white space in the category?
-- 13–15: Genuinely differentiated — ownable territory no competitor currently occupies
-- 10–12: Somewhat fresh — familiar territory but with a distinctive angle
-- 6–9: Category mainstream — multiple competitors saying similar things
-- 0–5: Pure category cliché — the most default possible approach to this category
-
-C) INSIGHT-TO-EXECUTION COHERENCE (0–15 points)
-Even if the insight is strong, does the creative EXECUTION actually express it? Many scripts have a strong brief but the insight gets lost between strategy and production.
-- 13–15: The insight is palpably felt in every scene — you can trace the strategic thought directly to the execution
-- 10–12: Insight present in most scenes but diluted in some — the thread is visible but loses tension
-- 6–9: Insight present in concept but frequently abandoned at execution level — falls back to category defaults
-- 0–5: The script has essentially no connection to a real consumer truth — it is pure brand transmission
-
-══ STEP 3: EXECUTION EVALUATION (50 POINTS TOTAL) ══
-
-A) DISTINCTIVE BRAND ASSET ARCHITECTURE (0–10 points)
-- Is there a DBA present in the first 1.5 seconds? (mandatory — if absent, maximum 4 points)
-- Is the DBA woven through the script naturally or slapped on?
-- Does the DBA serve memory encoding or is it decorative?
-- Is the brand recognizable without the name being spoken?
-
-B) EMOTIONAL ARC QUALITY (0–10 points)
-- Does emotion shift meaningfully 2–3+ times? (flat arc = maximum 5 points)
-- Is there a deliberately designed peak moment?
-- Does the end land on an emotional high (peak-end rule compliance)?
-- Is neutral emotion avoided in every scene?
-
-C) PLATFORM-FORMAT ALIGNMENT (0–10 points)
-- Does the script's pacing match the platform's attention decay profile?
-- For fast-decay platforms (social): brand asset in first 1.5s, hook before 3s, works without audio?
-- For slow-decay platforms (TV, cinema): is the storytelling arc appropriately developed?
-- Are scene lengths appropriate for the platform?
-
-D) BEHAVIORAL BIAS DEPLOYMENT (0–10 points)
-- Are System 1 triggers present and effective?
-- Is the right-brain/left-brain balance correct for the stated objective?
-- Are biases (concreteness, peak-end, social proof, loss aversion, etc.) deployed at the right moments?
-- Are System 2 triggers (abstractions, heavy voiceover, complex comparisons) avoided?
-
-E) 3F BALANCE — FLUENCY + FEELING + FAME (0–10 points)
-- Fluency: Is processing made easy? Familiar patterns + distinctive assets working together?
-- Feeling: Is the dominant emotion clearly positive by the end? Is emotional dynamism present?
-- Fame: Does this script build top-of-mind availability? Would it be memorable and shareable?
-
-══ STEP 4: SCENE-BY-SCENE EVALUATION ══
-
-For each scene in the submitted script:
-- Execution quality: score 0–10 for this scene specifically
-- Consumer truth tapped: what specific consumer truth (if any) is anchored in this scene? If none: "None — pure brand delivery"
-- What's working: the single strongest thing about this scene
-- Fix: the single highest-leverage change for this scene
-
-══ STEP 5: VERDICT + FIXES ══
-
-VERDICT TIERS:
-- 85–100: Breakthrough — exceptional creative intelligence. Ship it.
-- 70–84: Strong — solid science and insight. Minor refinements before production.
-- 55–69: Solid — right direction, meaningful gaps. Fix before shoot.
-- 40–54: Needs work — fundamental issues in insight or execution. Rework before investing production budget.
-- Under 40: Rethink — the current direction will not deliver commercial outcomes. Go back to brief.
-
-TOP 3 FIXES: Identify the three changes with the highest impact-to-effort ratio. Be specific — not "improve emotional arc" but "move the DBA from scene 4 to scene 1, and add the brand sonic asset to the opening 1.5 seconds — this single change could increase brand recall by up to 191%."
-
-THE ONE REWRITE: Pick the single scene with the biggest gap between current and potential. Rewrite it completely to show exactly what the science-optimized version looks and sounds like.
-
-══ SCORING PRECISION RULES ══
-- Never give round numbers (not 20/20, not 10/10) unless truly perfect — perfect is rare
-- Be genuinely harsh on category clichés — they are the primary killer of advertising effectiveness
-- Score coherently — if insight is 6/20, execution coherence cannot be 14/15
-- Your scores must be defensible with specific evidence from the script text
-
-══ OUTPUT FORMAT — RETURN ONLY VALID RAW JSON ══
-
-{
-  "meta": {
-    "brand": "brand name from input",
-    "category": "inferred category",
-    "platform": "platform from input",
-    "objective": "objective from input",
-    "insight_provided": true or false
+const S = {
+  panelField: { border: '1px solid #0A0A0A', padding: '16px 20px', background: '#fff' },
+  panelNoTop:  { border: '1px solid #0A0A0A', borderTop: 'none', padding: '16px 20px', background: '#fff' },
+  label: {
+    display: 'block', fontSize: 9, letterSpacing: '0.2em',
+    textTransform: 'uppercase', color: '#9B9B95', marginBottom: 8,
   },
-  "category_insight": {
-    "primary_pain": "The functional problem this consumer has",
-    "psychological_pain": "The deeper emotional texture — what it actually FEELS like to live with this problem. Be specific and human.",
-    "category_cliches": ["cliché 1", "cliché 2", "cliché 3", "add as many as relevant"],
-    "white_space": "What is true about this consumer experience that no competitor is currently owning",
-    "category_entry_points": ["specific moment or trigger 1", "moment 2", "moment 3"],
-    "insight_used": "The specific consumer insight this script appears to be built on — or the generated insight if none was provided",
-    "insight_source": "provided by user | generated by Androit"
+  bareInput: {
+    border: 'none', padding: 0, fontSize: 14, fontWeight: 500,
+    background: 'transparent', outline: 'none', width: '100%',
+    color: '#0A0A0A', fontFamily: 'var(--font-body)',
   },
-  "scores": {
-    "insight": {
-      "consumer_truth_accuracy": { "score": 0, "max": 20, "rationale": "Specific evidence from the script for this score" },
-      "insight_freshness": { "score": 0, "max": 15, "rationale": "Specific evidence" },
-      "insight_execution_coherence": { "score": 0, "max": 15, "rationale": "Specific evidence" },
-      "subtotal": 0,
-      "max": 50
-    },
-    "execution": {
-      "dba_architecture": { "score": 0, "max": 10, "rationale": "Specific evidence" },
-      "emotional_arc": { "score": 0, "max": 10, "rationale": "Specific evidence" },
-      "platform_alignment": { "score": 0, "max": 10, "rationale": "Specific evidence" },
-      "bias_deployment": { "score": 0, "max": 10, "rationale": "Specific evidence" },
-      "three_f_balance": { "score": 0, "max": 10, "rationale": "Specific evidence" },
-      "subtotal": 0,
-      "max": 50
-    },
-    "total": 0,
-    "max": 100
+  sectionLabel: {
+    fontSize: 9, letterSpacing: '0.25em',
+    textTransform: 'uppercase', color: '#9B9B95', marginBottom: 8,
   },
-  "verdict": {
-    "tier": "Breakthrough | Strong | Solid | Needs work | Rethink",
-    "headline": "A single punchy sentence verdict — direct, honest, no corporate softening",
-    "summary": "2–3 sentence overall assessment that a creative director would find genuinely useful"
-  },
-  "scene_scores": [
-    {
-      "timecode": "scene timecode or number",
-      "scene_summary": "one-line description of what happens in this scene",
-      "execution_score": 0,
-      "execution_score_max": 10,
-      "consumer_truth_tapped": "The specific consumer truth anchored here, or 'None — pure brand delivery'",
-      "whats_working": "The single strongest element of this scene",
-      "fix": "The single most impactful change for this specific scene"
+  card: { border: '1px solid #0A0A0A', padding: '20px', background: '#fff' },
+}
+
+// ── HEADER ─────────────────────────────────────────────────────────────
+function Header({ activeTab }) {
+  const router = useRouter()
+  return (
+    <header style={{ borderBottom: '1px solid #0A0A0A', background: '#0A0A0A' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, letterSpacing: '0.1em', color: '#F59E0B', textTransform: 'uppercase' }}>
+            Androit
+          </span>
+          <span style={{ fontSize: 9, color: '#3A3A35', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Proprietary Script Intelligence</span>
+        </div>
+        <nav style={{ display: 'flex', gap: 2 }}>
+          {[{ label: 'Write', href: '/' }, { label: 'Test', href: '/test' }].map(t => {
+            const active = activeTab === t.label
+            return (
+              <button key={t.label} onClick={() => router.push(t.href)} style={{
+                padding: '6px 18px', fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
+                background: active ? '#F59E0B' : 'transparent',
+                color: active ? '#0A0A0A' : '#5A5A55',
+                border: 'none', borderRadius: 2, transition: 'all 0.15s',
+              }}>{t.label}</button>
+            )
+          })}
+        </nav>
+        <div style={{ display: 'flex', gap: 5 }}>
+          {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, background: i === 0 ? '#F59E0B' : '#2A2A25', borderRadius: 1 }} />)}
+        </div>
+      </div>
+    </header>
+  )
+}
+
+// ── SCORE GAUGE ────────────────────────────────────────────────────────
+function ScoreGauge({ score, max, label, accent }) {
+  const pct = Math.round((score / max) * 100)
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+        <span style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#9B9B95' }}>{label}</span>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 900, color: '#0A0A0A', lineHeight: 1 }}>
+          {score}<span style={{ fontSize: 14, fontWeight: 400, color: '#9B9B95' }}>/{max}</span>
+        </span>
+      </div>
+      <div style={{ height: 3, background: '#E8E8E4', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: accent, transition: 'width 1s ease', borderRadius: 2 }} />
+      </div>
+      <div style={{ fontSize: 10, color: '#9B9B95', marginTop: 4 }}>{pct}%</div>
+    </div>
+  )
+}
+
+// ── SCENE SCORE BAR ───────────────────────────────────────────────────
+function SceneScoreBar({ score, max = 10 }) {
+  const pct = (score / max) * 100
+  const color = pct >= 70 ? '#16A34A' : pct >= 45 ? '#D97706' : '#DC2626'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ flex: 1, height: 2, background: '#E8E8E4', borderRadius: 1 }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 1 }} />
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 700, color, minWidth: 28, textAlign: 'right' }}>{score}/{max}</span>
+    </div>
+  )
+}
+
+// ── SUBMISSION FORM ────────────────────────────────────────────────────
+function TestForm({ sub, setSub, onSubmit, error }) {
+  const [insightProvided, setInsightProvided] = useState(false)
+  const canSubmit = sub.brand && sub.category && sub.platform && sub.objective && sub.script?.trim().length > 40
+
+  function set(k, v) { setSub(s => ({ ...s, [k]: v })) }
+
+  useEffect(() => {
+    setSub(s => ({ ...s, insightProvided }))
+  }, [insightProvided])
+
+  return (
+    <main style={{ maxWidth: 820, margin: '0 auto', padding: '48px 32px 80px' }}>
+
+      {/* Hero */}
+      <div style={{ marginBottom: 48, paddingBottom: 32, borderBottom: '1px solid #0A0A0A' }}>
+        <div style={{ ...S.sectionLabel, marginBottom: 12 }}>Ad Testing Engine</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 68, fontWeight: 900, letterSpacing: '0.02em', textTransform: 'uppercase', lineHeight: 0.88, color: '#0A0A0A', marginBottom: 20 }}>
+          Test<br/>Your<br/>Script
+        </h1>
+        <p style={{ fontSize: 13, color: '#5A5A55', maxWidth: 460, lineHeight: 1.75 }}>
+          Two-layer evaluation: whether your script is built on a real consumer truth for this category, and whether the execution meets behavioral science standards. Scored to 100.
+        </p>
+      </div>
+
+      {/* Section label */}
+      <div style={{ ...S.sectionLabel, marginBottom: 20 }}>The submission</div>
+
+      {/* Brand + Category */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, marginBottom: 1 }}>
+        {[
+          { key: 'brand',    label: 'Brand name',             placeholder: 'e.g. Dove' },
+          { key: 'category', label: 'Product / category',     placeholder: 'e.g. Hairfall shampoo, Running shoes, BFSI' },
+        ].map(f => (
+          <div key={f.key} style={S.panelField}>
+            <label style={S.label}>{f.label}</label>
+            <input value={sub[f.key] || ''} onChange={e => set(f.key, e.target.value)} placeholder={f.placeholder} style={S.bareInput} />
+          </div>
+        ))}
+      </div>
+
+      {/* Platform + Objective */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, marginBottom: 1 }}>
+        {[
+          { key: 'platform',  label: 'Platform',            placeholder: 'e.g. Instagram Reels, TV 30s' },
+          { key: 'objective', label: 'Campaign objective',  placeholder: 'e.g. Brand awareness, trial, consideration' },
+        ].map(f => (
+          <div key={f.key} style={{ ...S.panelField, borderTop: 'none' }}>
+            <label style={S.label}>{f.label} <span style={{ color: '#DC2626', fontSize: 9 }}>required</span></label>
+            <input value={sub[f.key] || ''} onChange={e => set(f.key, e.target.value)} placeholder={f.placeholder} style={S.bareInput} />
+          </div>
+        ))}
+      </div>
+
+      {/* Audience */}
+      <div style={S.panelNoTop}>
+        <label style={S.label}>Target audience <span style={{ color: '#9B9B95', fontSize: 9 }}>optional</span></label>
+        <input value={sub.audience || ''} onChange={e => set('audience', e.target.value)} placeholder="e.g. Women 25–40, urban, experiencing hairfall" style={S.bareInput} />
+      </div>
+
+      {/* Insight toggle */}
+      <div style={S.panelNoTop}>
+        <div style={{ ...S.label, marginBottom: 14 }}>Do you have an insight this script is based on?</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[
+            { v: false, label: 'No — generate & test against it', desc: 'Androit will derive the right insight for this category and evaluate your script against it' },
+            { v: true,  label: 'Yes — I have one',                desc: 'Paste your insight below and we\'ll test both its strength and how well your script expresses it' },
+          ].map(opt => (
+            <button key={String(opt.v)} onClick={() => setInsightProvided(opt.v)} style={{
+              flex: 1, padding: '12px 14px', cursor: 'pointer', textAlign: 'left',
+              background: insightProvided === opt.v ? '#0A0A0A' : 'transparent',
+              border: insightProvided === opt.v ? '1px solid #0A0A0A' : '1px solid #E8E8E4',
+              borderRadius: 2, transition: 'all 0.15s',
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', color: insightProvided === opt.v ? '#F59E0B' : '#0A0A0A', marginBottom: 4 }}>{opt.label}</div>
+              <div style={{ fontSize: 10, color: insightProvided === opt.v ? '#6A6A60' : '#9B9B95', lineHeight: 1.5 }}>{opt.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Insight text — shown only if provided */}
+      {insightProvided && (
+        <div style={S.panelNoTop}>
+          <label style={S.label}>Your insight</label>
+          <textarea
+            value={sub.insight || ''}
+            onChange={e => set('insight', e.target.value)}
+            placeholder="e.g. Women experiencing hairfall aren't looking for beautiful hair — they're looking for someone who acknowledges the specific grief of watching their hair change and not being able to stop it..."
+            rows={4}
+            style={{ ...S.bareInput, fontSize: 13, fontWeight: 400, resize: 'vertical', lineHeight: 1.7 }}
+          />
+        </div>
+      )}
+
+      {/* Script input */}
+      <div style={S.panelNoTop}>
+        <label style={S.label}>
+          Your script <span style={{ color: '#DC2626', fontSize: 9 }}>required</span>
+          <span style={{ color: '#9B9B95', fontSize: 9, marginLeft: 6 }}>paste your script, storyboard notes, scene descriptions, or any format</span>
+        </label>
+        <textarea
+          value={sub.script || ''}
+          onChange={e => set('script', e.target.value)}
+          placeholder={`Scene 1 (0s–5s): Woman wakes up, walks to bathroom mirror...
+Scene 2 (5s–12s): Close-up of hairbrush — more hair than usual...
+Scene 3 (12s–20s): Product introduction...
+
+Or paste any format — scene-by-scene, full script, bullet points. The engine will read and evaluate it.`}
+          rows={14}
+          style={{ ...S.bareInput, fontSize: 12, fontWeight: 400, resize: 'vertical', lineHeight: 1.75 }}
+        />
+      </div>
+
+      <button onClick={onSubmit} disabled={!canSubmit} style={{
+        display: 'block', width: '100%', marginTop: 1,
+        padding: '18px 24px', fontFamily: 'var(--font-display)',
+        fontSize: 18, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+        cursor: canSubmit ? 'pointer' : 'not-allowed',
+        background: canSubmit ? '#0A0A0A' : '#E8E8E4',
+        color: canSubmit ? '#F59E0B' : '#9B9B95',
+        border: 'none', transition: 'all 0.15s',
+      }}>
+        Run Evaluation →
+      </button>
+
+      {error && (
+        <div style={{ marginTop: 16, padding: '12px 16px', background: '#FEE2E2', border: '1px solid #DC2626', fontSize: 12, color: '#991B1B' }}>{error}</div>
+      )}
+    </main>
+  )
+}
+
+// ── LOADING SCREEN ─────────────────────────────────────────────────────
+function LoadingScreen({ step }) {
+  const total = LOADING_STEPS.length
+  return (
+    <main style={{ maxWidth: 820, margin: '0 auto', padding: '48px 32px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minHeight: '70vh', justifyContent: 'center' }}>
+      <style>{`@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}`}</style>
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: 80, fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.85, color: '#0A0A0A', opacity: 0.06, userSelect: 'none', marginBottom: 52 }}>
+        Testing<br/>Your<br/>Script
+      </div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 32 }}>
+        {LOADING_STEPS.map((_, i) => (
+          <div key={i} style={{ width: 26, height: 3, background: i < step ? '#F59E0B' : i === step ? '#0A0A0A' : '#E8E8E4', transition: 'background 0.4s ease' }} />
+        ))}
+      </div>
+      <div style={{ ...S.sectionLabel, marginBottom: 6 }}>Step {step + 1} of {total}</div>
+      <div style={{ fontSize: 22, fontWeight: 600, color: '#0A0A0A', lineHeight: 1.3 }}>
+        {LOADING_STEPS[Math.min(step, total - 1)]}
+        <span style={{ animation: 'blink 1.1s step-end infinite', color: '#F59E0B' }}>_</span>
+      </div>
+      <div style={{ marginTop: 20, fontSize: 11, color: '#9B9B95' }}>
+        {Math.round((step / total) * 100)}% — Androit's test engine is working
+      </div>
+    </main>
+  )
+}
+
+// ── RESULTS PAGE ───────────────────────────────────────────────────────
+function TestResults({ result, onReset }) {
+  const [expandedScene, setExpandedScene] = useState(null)
+  const [showRewrite, setShowRewrite] = useState(false)
+
+  const r = result
+  const scores = r?.scores || {}
+  const ins = scores?.insight || {}
+  const exc = scores?.execution || {}
+  const verdict = r?.verdict || {}
+  const tier = TIER_CONFIG[verdict.tier] || TIER_CONFIG['Solid']
+  const ci = r?.category_insight || {}
+  const scenes = r?.scene_scores || []
+  const fixes = r?.top_fixes || []
+  const rewrite = r?.the_one_rewrite || {}
+  const total = scores?.total || 0
+
+  return (
+    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 80px' }}>
+
+      {/* Back */}
+      <button onClick={onReset} style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9B9B95', cursor: 'pointer', background: 'none', border: 'none', padding: 0, marginBottom: 32 }}>
+        ← New evaluation
+      </button>
+
+      {/* Title + tier badge */}
+      <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: '1px solid #0A0A0A', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ ...S.sectionLabel }}>Evaluation results · {r?.meta?.brand}</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 52, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.03em', lineHeight: 0.95, color: '#0A0A0A', marginTop: 8 }}>
+            {r?.meta?.category}
+          </h2>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 72, fontWeight: 900, lineHeight: 1, color: '#0A0A0A' }}>{total}</div>
+          <div style={{ fontSize: 10, color: '#9B9B95', letterSpacing: '0.1em' }}>OUT OF 100</div>
+        </div>
+      </div>
+
+      {/* Verdict banner */}
+      <div style={{ border: `1px solid ${tier.color}`, borderLeft: `4px solid ${tier.color}`, padding: '20px 24px', background: tier.bg, marginBottom: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: tier.color }}>{verdict.tier}</span>
+          <span style={{ fontSize: 9, color: tier.color, opacity: 0.6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{r?.meta?.platform} · {r?.meta?.objective}</span>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', marginBottom: 8 }}>{verdict.headline}</div>
+        <div style={{ fontSize: 12, color: '#5A5A55', lineHeight: 1.75 }}>{verdict.summary}</div>
+      </div>
+
+      {/* Score gauges */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, marginBottom: 1 }}>
+        <div style={{ ...S.card, borderTop: 'none' }}>
+          <div style={{ ...S.sectionLabel }}>Insight score</div>
+          <ScoreGauge score={ins.subtotal || 0} max={50} label="Total insight" accent="#F59E0B" />
+          <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <ScoreGauge score={ins.consumer_truth_accuracy?.score || 0} max={20} label="Consumer truth accuracy" accent="#F59E0B" />
+            <ScoreGauge score={ins.insight_freshness?.score || 0} max={15} label="Insight freshness" accent="#F59E0B" />
+            <ScoreGauge score={ins.insight_execution_coherence?.score || 0} max={15} label="Insight-execution coherence" accent="#F59E0B" />
+          </div>
+        </div>
+        <div style={{ ...S.card, borderTop: 'none', borderLeft: 'none' }}>
+          <div style={{ ...S.sectionLabel }}>Execution score</div>
+          <ScoreGauge score={exc.subtotal || 0} max={50} label="Total execution" accent="#2563EB" />
+          <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <ScoreGauge score={exc.dba_architecture?.score || 0} max={10} label="DBA architecture" accent="#2563EB" />
+            <ScoreGauge score={exc.emotional_arc?.score || 0} max={10} label="Emotional arc" accent="#2563EB" />
+            <ScoreGauge score={exc.platform_alignment?.score || 0} max={10} label="Platform alignment" accent="#2563EB" />
+            <ScoreGauge score={exc.bias_deployment?.score || 0} max={10} label="Bias deployment" accent="#2563EB" />
+            <ScoreGauge score={exc.three_f_balance?.score || 0} max={10} label="3F balance" accent="#2563EB" />
+          </div>
+        </div>
+      </div>
+
+      {/* Score rationales */}
+      <div style={{ border: '1px solid #0A0A0A', borderTop: 'none', padding: '20px', marginBottom: 1 }}>
+        <div style={{ ...S.sectionLabel, marginBottom: 16 }}>Score rationale</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          {[
+            { label: 'Consumer truth accuracy', data: ins.consumer_truth_accuracy, accent: '#F59E0B' },
+            { label: 'Insight freshness',       data: ins.insight_freshness,       accent: '#F59E0B' },
+            { label: 'Insight-execution coherence', data: ins.insight_execution_coherence, accent: '#F59E0B' },
+            { label: 'DBA architecture',        data: exc.dba_architecture,        accent: '#2563EB' },
+            { label: 'Emotional arc',            data: exc.emotional_arc,            accent: '#2563EB' },
+            { label: 'Platform alignment',       data: exc.platform_alignment,       accent: '#2563EB' },
+            { label: 'Bias deployment',          data: exc.bias_deployment,          accent: '#2563EB' },
+            { label: '3F balance',               data: exc.three_f_balance,          accent: '#2563EB' },
+          ].map(({ label, data, accent }) => data && (
+            <div key={label} style={{ paddingLeft: 12, borderLeft: `2px solid ${accent}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0A0A0A', marginBottom: 3 }}>{label}</div>
+              <div style={{ fontSize: 11, color: '#5A5A55', lineHeight: 1.7 }}>{data.rationale}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Category insight panel */}
+      <div style={{ border: '1px solid #0A0A0A', borderTop: 'none', background: '#FFFBEB', borderLeft: '4px solid #F59E0B', padding: '20px', marginBottom: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div style={{ ...S.sectionLabel, color: '#92400E' }}>Category insight analysis</div>
+          <span style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9B9B95', background: ci.insight_source === 'provided by user' ? '#DCFCE7' : '#FEF3C7', color: ci.insight_source === 'provided by user' ? '#14532D' : '#92400E', padding: '3px 10px', borderRadius: 2, fontWeight: 700 }}>
+            {ci.insight_source === 'provided by user' ? 'User-provided insight' : 'Generated by Androit'}
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#92400E', marginBottom: 6 }}>Primary pain</div>
+            <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.7 }}>{ci.primary_pain}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#92400E', marginBottom: 6 }}>Psychological pain <span style={{ color: '#D97706' }}>— the real one</span></div>
+            <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.7 }}>{ci.psychological_pain}</div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#92400E', marginBottom: 8 }}>Insight used to evaluate this script</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0A0A0A', lineHeight: 1.7, fontStyle: 'italic' }}>"{ci.insight_used}"</div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#92400E', marginBottom: 8 }}>Category clichés detected</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {(ci.category_cliches || []).map((c, i) => (
+                <span key={i} style={{ background: '#FEE2E2', color: '#991B1B', fontSize: 9, fontWeight: 700, padding: '3px 10px', borderRadius: 2, letterSpacing: '0.04em' }}>{c}</span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#92400E', marginBottom: 8 }}>White space available</div>
+            <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.7 }}>{ci.white_space}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scene-by-scene table */}
+      <div style={{ border: '1px solid #0A0A0A', borderTop: 'none', overflow: 'hidden', marginBottom: 1 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #0A0A0A', background: '#0A0A0A', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#F59E0B' }}>Scene-by-scene evaluation</div>
+            <div style={{ fontSize: 9, color: '#5A5A55', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 3 }}>Click any scene to expand rationale</div>
+          </div>
+          <div style={{ fontSize: 10, color: '#5A5A55' }}>{scenes.length} scenes</div>
+        </div>
+
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              {['Scene', 'Score', 'Consumer truth tapped', "What's working", 'Fix'].map(h => (
+                <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#9B9B95', borderBottom: '1px solid #0A0A0A', background: '#F5F5F2', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {scenes.map((sc, i) => {
+              const hasTruth = sc.consumer_truth_tapped && !sc.consumer_truth_tapped.toLowerCase().includes('none')
+              return (
+                <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#FAFAF8', cursor: 'pointer' }} onClick={() => setExpandedScene(expandedScene === i ? null : i)}>
+                  <td style={{ padding: '13px 16px', maxWidth: 140 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#92400E', background: '#FEF3C7', display: 'inline-block', padding: '2px 8px', borderRadius: 2, marginBottom: 4 }}>{sc.timecode}</div>
+                    <div style={{ fontSize: 11, color: '#5A5A55', lineHeight: 1.5 }}>{sc.scene_summary}</div>
+                  </td>
+                  <td style={{ padding: '13px 16px', minWidth: 120 }}>
+                    <SceneScoreBar score={sc.execution_score || 0} max={sc.execution_score_max || 10} />
+                  </td>
+                  <td style={{ padding: '13px 16px', maxWidth: 200 }}>
+                    {hasTruth
+                      ? <span style={{ fontSize: 11, color: '#14532D', background: '#DCFCE7', padding: '3px 8px', borderRadius: 2, display: 'inline-block', lineHeight: 1.5 }}>{sc.consumer_truth_tapped}</span>
+                      : <span style={{ fontSize: 10, color: '#9B9B95', fontStyle: 'italic' }}>None — pure brand delivery</span>}
+                  </td>
+                  <td style={{ padding: '13px 16px', maxWidth: 200, fontSize: 11, color: '#0A0A0A', lineHeight: 1.6 }}>{sc.whats_working}</td>
+                  <td style={{ padding: '13px 16px', maxWidth: 200, fontSize: 11, color: '#DC2626', lineHeight: 1.6 }}>{sc.fix}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Top 3 fixes */}
+      <div style={{ border: '1px solid #0A0A0A', borderTop: 'none', padding: '20px', marginBottom: 1 }}>
+        <div style={{ ...S.sectionLabel, marginBottom: 16 }}>Top 3 highest-impact fixes</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {fixes.map((fix, i) => (
+            <div key={i} style={{ display: 'flex', gap: 16, padding: '16px', background: '#F9F9F7', border: '1px solid #E8E8E4', borderRadius: 2 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 900, color: '#E8E8E4', lineHeight: 1, minWidth: 32 }}>
+                {fix.priority}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.75, marginBottom: 8 }}>{fix.fix}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: '2px 10px', borderRadius: 2, letterSpacing: '0.08em',
+                    background: fix.impact === 'High' ? '#FEE2E2' : '#FEF3C7',
+                    color: fix.impact === 'High' ? '#991B1B' : '#92400E',
+                  }}>Impact: {fix.impact}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: '2px 10px', borderRadius: 2, letterSpacing: '0.08em',
+                    background: fix.effort === 'Low' ? '#DCFCE7' : fix.effort === 'Medium' ? '#FEF3C7' : '#FEE2E2',
+                    color: fix.effort === 'Low' ? '#14532D' : fix.effort === 'Medium' ? '#92400E' : '#991B1B',
+                  }}>Effort: {fix.effort}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* The one rewrite */}
+      <div style={{ border: '1px solid #0A0A0A', borderTop: 'none' }}>
+        <button onClick={() => setShowRewrite(r => !r)} style={{
+          width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '16px 20px', cursor: 'pointer', border: 'none',
+          background: showRewrite ? '#F9F8F5' : '#fff', fontFamily: 'var(--font-body)',
+          fontWeight: 600, fontSize: 12, letterSpacing: '0.04em', color: '#0A0A0A', textAlign: 'left',
+          transition: 'background 0.15s',
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ color: '#DC2626', fontSize: 13 }}>◆</span>
+            The one rewrite — {rewrite.scene_reference}
+          </span>
+          <span style={{ fontSize: 16, color: '#9B9B95', fontWeight: 300, display: 'inline-block', transform: showRewrite ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>↓</span>
+        </button>
+
+        {showRewrite && (
+          <div style={{ borderTop: '1px solid #0A0A0A' }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #E8E8E4', background: '#FFFBEB' }}>
+              <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#92400E', marginBottom: 8 }}>Why this scene</div>
+              <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.75 }}>{rewrite.why_this_scene}</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+              <div style={{ padding: '20px', borderRight: '1px solid #E8E8E4' }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#DC2626', marginBottom: 12 }}>Original</div>
+                <div style={{ fontSize: 12, color: '#5A5A55', lineHeight: 1.75, fontStyle: 'italic', background: '#FEF2F2', padding: '12px', borderRadius: 2, border: '1px solid #FCA5A5' }}>
+                  {rewrite.original}
+                </div>
+                {rewrite.rewritten_script && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#9B9B95', marginBottom: 6 }}>Original script</div>
+                    <div style={{ fontSize: 11, color: '#5A5A55', lineHeight: 1.65, fontStyle: 'italic' }}>{rewrite.original_script}</div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ padding: '20px' }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#16A34A', marginBottom: 12 }}>Rewritten</div>
+                <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.75, background: '#F0FDF4', padding: '12px', borderRadius: 2, border: '1px solid #86EFAC' }}>
+                  {rewrite.rewritten_scene}
+                </div>
+                {rewrite.rewritten_script && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#9B9B95', marginBottom: 6 }}>Rewritten script</div>
+                    <div style={{ fontSize: 11, color: '#0A0A0A', lineHeight: 1.65 }}>{rewrite.rewritten_script}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ padding: '20px', borderTop: '1px solid #E8E8E4', background: '#F9F9F7' }}>
+              <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#9B9B95', marginBottom: 10 }}>What changed and why</div>
+              <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.8 }}>{rewrite.what_changed}</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  )
+}
+
+// ── ROOT ───────────────────────────────────────────────────────────────
+export default function TestPage() {
+  const [view, setView] = useState('form')
+  const [loadingStep, setLoadingStep] = useState(0)
+  const [sub, setSub] = useState({
+    brand: '', category: '', platform: '', objective: '',
+    audience: '', insightProvided: false, insight: '', script: '',
+  })
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let iv
+    if (view === 'loading') {
+      setLoadingStep(0)
+      iv = setInterval(() => setLoadingStep(s => s < LOADING_STEPS.length - 1 ? s + 1 : s), 2600)
     }
-  ],
-  "top_fixes": [
-    {
-      "priority": 1,
-      "fix": "Specific, actionable fix with scientific rationale and estimated impact",
-      "impact": "High | Medium",
-      "effort": "Low | Medium | High"
-    },
-    {
-      "priority": 2,
-      "fix": "Specific fix",
-      "impact": "High | Medium",
-      "effort": "Low | Medium | High"
-    },
-    {
-      "priority": 3,
-      "fix": "Specific fix",
-      "impact": "Medium",
-      "effort": "Low | Medium | High"
+    return () => clearInterval(iv)
+  }, [view])
+
+  const handleSubmit = async () => {
+    setError(null)
+    setView('loading')
+    try {
+      const res = await fetch('/api/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submission: sub }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Evaluation failed')
+      setResult(data.result)
+      setView('results')
+    } catch (e) {
+      setError(e.message)
+      setView('form')
     }
-  ],
-  "the_one_rewrite": {
-    "scene_reference": "Which scene is being rewritten",
-    "why_this_scene": "Why this scene has the highest gap between current and potential",
-    "original": "The original scene text as submitted",
-    "rewritten_scene": "The complete rewritten scene description",
-    "rewritten_script": "The rewritten dialogue or visual direction",
-    "what_changed": "Specific list of what was changed and the science behind each change"
   }
-}`
 
-export const config = { maxDuration: 60 }
-
-const GEMINI_MODELS = [
-  'gemini-2.5-pro-preview-06-05',
-  'gemini-2.5-pro',
-  'gemini-2.0-flash-preview',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite-preview-06-17',
-  'gemini-2.5-flash-lite',
-]
-const GROQ_MODELS = [
-  'llama-3.3-70b-versatile',
-  'llama-3.1-70b-versatile',
-  'mixtral-8x7b-32768',
-  'llama3-70b-8192',
-  'gemma2-9b-it',
-]
-const OPENROUTER_MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'mistralai/mixtral-8x7b-instruct:free',
-  'google/gemma-2-9b-it:free',
-  'meta-llama/llama-3.1-8b-instruct:free',
-]
-
-function extractJSON(text) {
-  try { return JSON.parse(text) } catch {}
-  const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-  try { return JSON.parse(cleaned) } catch {}
-  const m = text.match(/\{[\s\S]*\}/)
-  if (m) { try { return JSON.parse(m[0]) } catch {} }
-  throw new Error('Could not parse JSON from model response')
-}
-
-async function callGemini(prompt) {
-  const key = process.env.GEMINI_API_KEY
-  if (!key) return null
-  for (const model of GEMINI_MODELS) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: TEST_BRAIN }] },
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.6, maxOutputTokens: 8192 },
-          }),
-          signal: AbortSignal.timeout(50000),
-        }
-      )
-      if (!res.ok) continue
-      const data = await res.json()
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-      if (!text) continue
-      return extractJSON(text)
-    } catch { continue }
-  }
-  return null
-}
-
-async function callGroq(prompt) {
-  const key = process.env.GROQ_API_KEY
-  if (!key) return null
-  for (const model of GROQ_MODELS) {
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'system', content: TEST_BRAIN }, { role: 'user', content: prompt }],
-          max_tokens: 8192, temperature: 0.6,
-        }),
-        signal: AbortSignal.timeout(30000),
-      })
-      if (!res.ok) continue
-      const data = await res.json()
-      const text = data.choices?.[0]?.message?.content
-      if (!text) continue
-      return extractJSON(text)
-    } catch { continue }
-  }
-  return null
-}
-
-async function callOpenRouter(prompt) {
-  const key = process.env.OPENROUTER_API_KEY
-  if (!key) return null
-  for (const model of OPENROUTER_MODELS) {
-    try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${key}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://androit.ai',
-          'X-Title': 'Androit',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'system', content: TEST_BRAIN }, { role: 'user', content: prompt }],
-          max_tokens: 8192, temperature: 0.6,
-        }),
-        signal: AbortSignal.timeout(30000),
-      })
-      if (!res.ok) continue
-      const data = await res.json()
-      const text = data.choices?.[0]?.message?.content
-      if (!text) continue
-      return extractJSON(text)
-    } catch { continue }
-  }
-  return null
-}
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  const { submission } = req.body
-  if (!submission) return res.status(400).json({ error: 'No submission provided' })
-
-  const prompt = `Evaluate this ad script submission:
-
-BRAND: ${submission.brand}
-PRODUCT / CATEGORY: ${submission.category}
-PLATFORM: ${submission.platform}
-CAMPAIGN OBJECTIVE: ${submission.objective}
-TARGET AUDIENCE: ${submission.audience || 'Not specified — infer from brand and category'}
-INSIGHT PROVIDED BY USER: ${submission.insightProvided ? 'YES' : 'NO — generate the correct category insight and evaluate the script against it'}
-${submission.insightProvided ? `USER'S INSIGHT: ${submission.insight}` : ''}
-
-SCRIPT TO EVALUATE:
-${submission.script}
-
-Run the full evaluation. Be precise, specific, and genuinely useful. Never soften scores out of politeness — harsh honest feedback is more valuable than polite vagueness. Return only valid raw JSON.`
-
-  try {
-    const result =
-      (await callGemini(prompt)) ||
-      (await callGroq(prompt)) ||
-      (await callOpenRouter(prompt))
-
-    if (!result) return res.status(500).json({ error: 'All intelligence systems failed. Please try again.' })
-    return res.status(200).json({ result })
-  } catch (err) {
-    return res.status(500).json({ error: err.message || 'Unknown error' })
-  }
+  return (
+    <>
+      <Head>
+        <title>Androit — Test Your Script</title>
+        <meta name="description" content="Ad script testing engine — insight quality and execution scoring" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      <Header activeTab="Test" />
+      {view === 'form'    && <TestForm sub={sub} setSub={setSub} onSubmit={handleSubmit} error={error} />}
+      {view === 'loading' && <LoadingScreen step={loadingStep} />}
+      {view === 'results' && result && <TestResults result={result} onReset={() => { setView('form'); setResult(null) }} />}
+    </>
+  )
 }
