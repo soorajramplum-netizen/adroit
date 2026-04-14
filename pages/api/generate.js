@@ -376,23 +376,37 @@ async function tryOpenRouter(userPrompt) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  // Always respond with JSON — never let Next.js return an HTML error page
+  res.setHeader('Content-Type', 'application/json')
 
-  const { brief } = req.body
-  if (!brief) return res.status(400).json({ error: 'No brief provided' })
+  try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' })
+    }
 
-  // Fetch brand website in parallel with nothing (fire and collect)
-  const brandContext = await fetchBrandContext(brief.brandWebsite)
+    const { brief } = req.body || {}
+    if (!brief) {
+      return res.status(400).json({ error: 'No brief provided' })
+    }
+    if (!brief.brandName || !brief.platform || !brief.duration) {
+      return res.status(400).json({ error: 'Brand name, platform, and duration are required' })
+    }
 
-  const userPrompt = `Write a second-by-second shoot-ready script for this brief:
+    // Fetch brand website context (silent fail — never blocks generation)
+    let brandContext = null
+    try {
+      brandContext = await fetchBrandContext(brief.brandWebsite)
+    } catch (_) {}
+
+    const userPrompt = `Write a second-by-second shoot-ready script for this brief:
 
 BRAND: ${brief.brandName}
-PRODUCT/SERVICE: ${brief.productService}
+PRODUCT/SERVICE: ${brief.productService || 'Not specified'}
 TARGET AUDIENCE: ${brief.targetAudience || 'Not specified — infer from product and platform'}
 PLATFORM: ${brief.platform}
 DURATION: ${brief.duration}
-OBJECTIVE: ${brief.objective}
-BRAND EQUITY LEVEL: ${brief.brandEquity}
+OBJECTIVE: ${brief.objective || 'Not specified'}
+BRAND EQUITY LEVEL: ${brief.brandEquity || 'medium'}
 EXISTING DISTINCTIVE ASSETS: ${brief.distinctiveAssets || 'None specified — design new ones appropriate for this brand'}
 KEY MESSAGE: ${brief.keyMessage || 'Not specified — derive from product and audience'}
 MANDATORIES/CONSTRAINTS: ${brief.mandatories || 'None'}
@@ -403,7 +417,6 @@ ${formatBrandContext(brandContext)}
 
 Apply every brain framework rigorously. Be specific, concrete, and shoot-ready in every scene. The "script" field for every scene must NEVER be null or empty — if there is no dialogue, describe the visual performance instead. Return only valid raw JSON — no markdown, no preamble.`
 
-  try {
     const result =
       (await tryGemini(userPrompt)) ||
       (await tryGroq(userPrompt)) ||
@@ -413,9 +426,10 @@ Apply every brain framework rigorously. Be specific, concrete, and shoot-ready i
       return res.status(500).json({ error: 'All intelligence systems failed. Please try again.' })
     }
 
-    // Never expose which model was used
     return res.status(200).json({ output: result.parsed })
+
   } catch (err) {
-    return res.status(500).json({ error: err.message || 'Unknown error' })
+    console.error('Generate API error:', err)
+    return res.status(500).json({ error: err.message || 'Unexpected server error' })
   }
 }
