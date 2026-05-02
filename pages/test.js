@@ -128,6 +128,37 @@ function SceneScoreBar({ score, max = 10 }) {
 
 function TestForm({ sub, setSub, onSubmit, error }) {
   const [insightProvided, setInsightProvided] = useState(false)
+  const [inputMode, setInputMode] = useState('manual')
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [youtubeLoading, setYoutubeLoading] = useState(false)
+  const [youtubeError, setYoutubeError] = useState(null)
+  const [youtubeMeta, setYoutubeMeta] = useState(null)
+
+  const handleExtractYoutube = async () => {
+    setYoutubeLoading(true)
+    setYoutubeError(null)
+    setYoutubeMeta(null)
+    try {
+      const res = await fetch('/api/youtube', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: youtubeUrl }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Extraction failed')
+      setYoutubeMeta(data)
+      setSub(s => ({
+        ...s,
+        script:   data.reconstructedScript || '',
+        brand:    data.suggestedBrand    || s.brand,
+        category: data.suggestedCategory || s.category,
+      }))
+    } catch (e) {
+      setYoutubeError(e.message)
+    } finally {
+      setYoutubeLoading(false)
+    }
+  }
   const canSubmit = sub.brand && sub.category && sub.platform && sub.objective && sub.script?.trim().length > 40
 
   function set(k, v) { setSub(s => ({ ...s, [k]: v })) }
@@ -215,10 +246,92 @@ function TestForm({ sub, setSub, onSubmit, error }) {
         </div>
       )}
 
+      {/* Input mode */}
       <div style={S.panelNoTop}>
-        <label style={S.label}>Your script <span style={{ color: '#DC2626', fontSize: 9 }}>required</span> <span style={{ color: '#9B9B95', fontSize: 9 }}>any format — scene notes, full script, bullets</span></label>
+        <div style={{ ...S.label, marginBottom: 14 }}>How would you like to submit your ad?</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[
+            { v: 'manual',  label: 'Paste script',  desc: 'Type or paste your script in any format — scene notes, bullets, or full description' },
+            { v: 'youtube', label: 'YouTube link',  desc: 'Paste a YouTube URL — Adroit reads the transcript and reconstructs the script automatically' },
+          ].map(opt => {
+            const active = inputMode === opt.v
+            return (
+              <button key={opt.v} onClick={() => setInputMode(opt.v)} style={{
+                flex: 1, padding: '12px 14px', cursor: 'pointer', textAlign: 'left',
+                background: active ? '#0A0A0A' : 'transparent',
+                border: active ? '1px solid #0A0A0A' : '1px solid #E8E8E4',
+                borderRadius: 2, transition: 'all 0.15s',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: active ? '#F59E0B' : '#0A0A0A', marginBottom: 4 }}>{opt.label}</div>
+                <div style={{ fontSize: 10, color: active ? '#6A6A60' : '#9B9B95', lineHeight: 1.5 }}>{opt.desc}</div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* YouTube URL field */}
+      {inputMode === 'youtube' && (
+        <div style={S.panelNoTop}>
+          <label style={S.label}>YouTube URL <span style={{ color: '#DC2626', fontSize: 9 }}>required</span></label>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <input value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)}
+              placeholder="https://youtube.com/watch?v=... or youtu.be/..."
+              style={{ ...S.bareInput, flex: 1 }}
+              onKeyDown={e => e.key === 'Enter' && youtubeUrl.trim() && !youtubeLoading && handleExtractYoutube()}
+            />
+            <button onClick={handleExtractYoutube} disabled={!youtubeUrl.trim() || youtubeLoading} style={{
+              padding: '9px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+              cursor: youtubeUrl.trim() && !youtubeLoading ? 'pointer' : 'not-allowed',
+              background: youtubeUrl.trim() && !youtubeLoading ? '#0A0A0A' : '#E8E8E4',
+              color: youtubeUrl.trim() && !youtubeLoading ? '#F59E0B' : '#9B9B95',
+              border: 'none', borderRadius: 2, whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+              {youtubeLoading ? 'Extracting…' : 'Extract →'}
+            </button>
+          </div>
+
+          {youtubeError && (
+            <div style={{ marginTop: 10, padding: '8px 12px', background: '#FEE2E2', borderRadius: 2, fontSize: 11, color: '#991B1B' }}>{youtubeError}</div>
+          )}
+
+          {youtubeMeta && !youtubeError && (
+            <div style={{ marginTop: 12, padding: '12px 16px', background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 2 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#0A0A0A', lineHeight: 1.4, flex: 1 }}>{youtubeMeta.title}</div>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', padding: '3px 10px', borderRadius: 2, flexShrink: 0,
+                  background: youtubeMeta.hasTranscript ? '#DCFCE7' : '#FEF3C7',
+                  color: youtubeMeta.hasTranscript ? '#14532D' : '#92400E',
+                }}>
+                  {youtubeMeta.hasTranscript ? '✓ Transcript found' : 'No captions — inferred from metadata'}
+                </span>
+              </div>
+              {youtubeMeta.durationSecs > 0 && (
+                <div style={{ fontSize: 10, color: '#5A5A55', marginTop: 4 }}>
+                  {youtubeMeta.durationSecs}s · {youtubeMeta.captionLanguages?.length > 0 ? youtubeMeta.captionLanguages.join(', ') : 'no captions'}
+                </div>
+              )}
+              <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 600, marginTop: 8 }}>✓ Script reconstructed — review below and edit if needed</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Script textarea */}
+      <div style={S.panelNoTop}>
+        <label style={S.label}>
+          {inputMode === 'youtube' ? 'Reconstructed script' : 'Your script'}
+          {inputMode !== 'youtube' && <span style={{ color: '#DC2626', fontSize: 9 }}> required</span>}
+          <span style={{ color: '#9B9B95', fontSize: 9 }}>
+            {inputMode === 'youtube' ? ' — auto-generated, edit freely before testing' : ' — any format: scene notes, full script, bullets'}
+          </span>
+        </label>
         <textarea value={sub.script || ''} onChange={e => set('script', e.target.value)}
-          placeholder={`Scene 1 (0s–5s): Woman wakes up, walks to bathroom mirror...\nScene 2 (5s–12s): Close-up of hairbrush — more hair than usual...\nScene 3 (12s–20s): Product introduction...`}
+          placeholder={inputMode === 'youtube'
+            ? 'Extract a YouTube video above to auto-populate this field…'
+            : 'Scene 1 (0s–5s): Woman wakes up, walks to bathroom mirror...\nScene 2 (5s–12s): Close-up of hairbrush — more hair than usual...\nScene 3 (12s–20s): Product introduction...'
+          }
           rows={12} style={{ ...S.bareInput, fontSize: 12, fontWeight: 400, resize: 'vertical', lineHeight: 1.75 }} />
       </div>
 
